@@ -1,6 +1,11 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Scatter Plots on Maps
+
+## 前言
+
+做個基於地圖的散佈圖 Side Project 來學習新工具，主要用到 React, Typescript, Tailwind, mapbox, deck.gl 這幾個。
 
 ## Getting Started
+This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
 First, run the development server:
 
