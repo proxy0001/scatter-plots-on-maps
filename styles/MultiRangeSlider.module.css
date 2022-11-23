@@ -1,0 +1,20 @@
+.thumb {
+    pointer-events: none;
+}
+
+/* Removing the default appearance */
+.thumb,
+.thumb::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* For Chrome browsers */
+.thumb::-webkit-slider-thumb {
+    @apply cursor-pointer rounded-full border-none h-4 w-4 pointer-events-auto bg-gray-700;
+}
+
+/* For Firefox browsers */
+.thumb::-moz-range-thumb {
+    @apply cursor-pointer rounded-full border-none h-4 w-4 pointer-events-auto bg-gray-700;
+}
