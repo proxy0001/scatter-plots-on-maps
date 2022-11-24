@@ -8,7 +8,7 @@ interface MultiRangeSliderProps {
     format?: (val: number) => string
 }
 
-type onChange = (event: React.ChangeEvent<HTMLInputElement>) => void
+type onChange = (event: ChangeEvent<HTMLInputElement>) => void
 
 const MultiRangeSlider = (props: MultiRangeSliderProps) => {
     const { min: defaultMin = 0,max: defaultMax = 60 * 24, onChange, format } = props
