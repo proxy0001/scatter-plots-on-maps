@@ -71,7 +71,44 @@
 - Multi Range Slider
 - Tooltip
 
+### Day 2
 
+自己寫一個 Multi Range Slider Component，初步熟悉一下 React 跟 Typescript 的實作結合以及 ...CSS，然後就花了一整天。
+
+#### 如何自製 Multi Range Slider？
+參考這篇文章 [Building a Multi-Range Slider in React From Scratch](https://dev.to/sandra_lewis/building-a-multi-range-slider-in-react-from-scratch-4dl1)，研究他的思路自己做一個。
+- 拖拉的按鈕直接借用原生 Range Input 來實現，就是把兩個 Range Input 疊在一起，產生兩個拖拉的按鈕。
+- 使用 pointer-events: none 讓上層的事件觸發無效，然後用偽元素選擇到瀏覽器實現的拖拉按鈕，設置 pointer-events: all 。到此就實現了兩個可以拖拉的按鈕。詳細參考[這篇](https://www.minwt.com/webdesign-dev/css/20208.html)以及[這篇](https://www.oxxostudio.tw/articles/201503/html5-input-range-style.html)改變樣式的方法
+- 剩下的邏輯跟畫面，大致上就可以自己實現了。他的版本還用到了 useRef, useEffect, useCallback 等對 DOM 進行操作或是等待 state 更新之後再進行資料操作，感覺比較複雜。自己實現的版本只需要用到 useState 就可以了，先把要做的資料操作函式定義好，輸入接受 state，直接綁在 JSX 裡面即可。
+
+#### 初步使用 React + Typescript 的心得
+- React 要注意 state 不會立即更新，會等到 comonentDidUpdate 之後才會更新，一般要寫 Callback 或是使用 useEffect 去監聽 state 的變化。詳細可以看官網或是這篇 [Why React doesn’t update state immediately](https://blog.logrocket.com/why-react-doesnt-update-state-immediately/)
+- React 中，組件要影響父層組件的話，習慣是直接傳入函式給子組件，而不是由子組件 Emit Event 出來給父層。
+- React 16.8 之後，就不用寫 Class 了，一律寫 Functional Component 即可。
+- Typescript 一開始用會非常不習慣，因為有好多東西不熟悉，不先搞懂 Code 就會動不了。
+    1. useState 這個 Hook 的型別定義可以了解一下
+    2. 一開始就會遇到 Compoenent Props 跟 default value 的定義方式，[這篇](https://react-typescript-cheatsheet.netlify.app/docs/basic/getting-started/default_props)跟[這篇](https://pjchender.blogspot.com/2020/07/typescript-react-using-typescript-in.html)跟[這篇](https://stackoverflow.com/questions/37282159/default-property-value-in-react-component-using-typescript)之後，自己目前是這樣寫
+    ``` typescript
+    interface MultiRangeSliderProps {
+        min?: number
+        max?: number 
+        onChange?: (min: number, max: number) => void
+        format?: (val: number) => string
+    }
+    const MultiRangeSlider = (props: MultiRangeSliderProps) => {
+        const { min: defaultMin = 0,max: defaultMax = 60 * 24, onChange, format } = props
+        const [min, setMin] = useState<number>(defaultMin)
+        const [max, setMax] = useState<number>(defaultMax)
+        ...
+    }
+    ```
+    2. 定義函式跟複雜的資料結構的型別時，比較複雜，還要多熟悉情境應用跟 Typescript 的功能
+    3. 有很多原生常用的格式，例如 HTML 的 Input Change Event，透過 IDE 滑鼠移上去可以看型別定義。
+    4. [React TypeScript Cheatsheet](https://react-typescript-cheatsheet.netlify.app/) 很有幫助！
+- React 的實踐方式跟最佳解，隨著版本迭代，有很多不同，查找資料時要特別注意。例如[這篇](https://pjchender.blogspot.com/2020/07/typescript-react-using-typescript-in.html)提到的，不再建議使用 React.FC。
+
+#### 其他小收穫
+- [字符串補全可用 padStart, padEnd](https://kknews.cc/code/empkroq.html)
 
 ## Getting Started
 This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
