@@ -2,7 +2,7 @@ import * as React from 'react';
 import Head from 'next/head'
 import Image from 'next/image'
 import styles from '../styles/Home.module.css'
-import { MultiRangeSlider, MultiSelect} from '../components/'
+import { Panel, MultiRangeSlider, MultiSelect } from '../components/'
 
 type MultiSelectOptions = React.ComponentProps<typeof MultiSelect>['options'];
 
@@ -27,14 +27,11 @@ export default function Home() {
         <div className="basis-3/4 flex justify-center items-center">here is map</div>
         <div className="basis-1/4 flex flex-col bg-gray-200 px-4 py-2">
           <div className="text-2xl text-center py-2">Filter</div>
-          <div className="py-2">
-            <legend className="text-lg py-3">Country/Region</legend>
+          <Panel title="Country/Region">
             <MultiSelect options={countryOptions} name="country"
-              onChange={(selected) => console.log(selected)}
-            />
-          </div>
-          <div className="py-2">
-            <legend className="text-lg py-3">Period</legend>
+              onChange={(selected) => console.log(selected)}/>
+          </Panel>
+          <Panel title="Period">
             <MultiRangeSlider min={0} max={60 * 24} name="period"
               onChange={(min, max) => console.log(min, max)}
               format={val => {
@@ -42,7 +39,7 @@ export default function Home() {
                 const minute = (val % 60).toString().padStart(2, '0')
                 return `${hour}:${minute}`
               }}/>
-          </div>
+          </Panel>
         </div>
       </main>
     </div>
