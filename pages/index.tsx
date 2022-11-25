@@ -2,7 +2,7 @@ import * as React from 'react';
 import Head from 'next/head'
 import Image from 'next/image'
 import styles from '../styles/Home.module.css'
-import { Panel, MultiRangeSlider, MultiSelect } from '../components/'
+import { ScatterMap, Panel, MultiRangeSlider, MultiSelect } from '../components/'
 
 type MultiSelectOptions = React.ComponentProps<typeof MultiSelect>['options'];
 
@@ -24,7 +24,9 @@ export default function Home() {
       </Head>
 
       <main className="flex flex-row w-full min-h-screen">
-        <div className="basis-3/4 flex justify-center items-center">here is map</div>
+        <div className="basis-3/4 flex justify-center items-center">
+          <ScatterMap/>
+        </div>
         <div className="basis-1/4 flex flex-col bg-gray-200 px-4 py-2">
           <div className="text-2xl text-center pt-1 pb-2 text-gray-700">Filter</div>
           <Panel title="Country / Region">
