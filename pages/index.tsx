@@ -1,9 +1,20 @@
+import * as React from 'react';
 import Head from 'next/head'
 import Image from 'next/image'
 import styles from '../styles/Home.module.css'
-import MultiRangeSlider from '../components/MultiRangeSlider'
+import { MultiRangeSlider, MultiSelect} from '../components/'
+
+type MultiSelectOptions = React.ComponentProps<typeof MultiSelect>['options'];
 
 export default function Home() {
+  const countryOptions:MultiSelectOptions = [
+    {value: 'taiwan', text: 'Taiwan', defaultChecked: true},
+    {value: 'china', text: 'China'},
+    {value: 'hong kong', text: 'Hong Kong'},
+    {value: 'japen', text: 'Japen'},
+    {value: 'korean', text: 'Korean'},
+    {value: 'others', text: 'Others'},
+  ]
   return (
     <div>
       <Head>
@@ -19,20 +30,9 @@ export default function Home() {
           <div className="py-2">
             <fieldset>
               <legend className="text-base py-2">Country/Region</legend>
-              <div className="flex flex-row flex-wrap gap-[4%]">
-                <div className="flex gap-1 items-baseline basis-[48%]">
-                  <input type="checkbox" id="taiwan" name="country" value="taiwan" />
-                  <label htmlFor="coding">Taiwan</label>
-                </div>
-                <div className="flex gap-1 items-baseline basis-[48%]">
-                  <input type="checkbox" id="hong kong" name="country" value="hong kong" />
-                  <label htmlFor="music">Hong Kong</label>
-                </div>
-                <div className="flex gap-1 items-baseline basis-[48%]">
-                  <input type="checkbox" id="china" name="country" value="china" />
-                  <label htmlFor="music">China</label>
-                </div>
-              </div>
+              <MultiSelect options={countryOptions} name="country"
+                onChange={(selected) => console.log(selected)}
+              />
             </fieldset>
           </div>
           <div className="py-2">
