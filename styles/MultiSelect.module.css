@@ -11,7 +11,7 @@
 
 /* Checked checkbox style (in this case the background is red) */
 .input[type="checkbox"]:checked:before {
-    @apply text-gray-700 bg-green-300;
+    @apply text-gray-700 bg-green-400;
 }
 
 /* Adding a dotted border around the active tabbed-into checkbox */
