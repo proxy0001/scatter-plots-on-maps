@@ -9,7 +9,7 @@ type MultiSelectOptions = React.ComponentProps<typeof MultiSelect>['options'];
 export default function Home() {
   const countryOptions:MultiSelectOptions = [
     {value: 'taiwan', text: 'Taiwan', defaultChecked: true},
-    {value: 'china', text: 'China'},
+    {value: 'china', text: 'China', disabled: true},
     {value: 'hong kong', text: 'Hong Kong'},
     {value: 'japen', text: 'Japen'},
     {value: 'korean', text: 'Korean'},
@@ -28,16 +28,14 @@ export default function Home() {
         <div className="basis-1/4 flex flex-col bg-gray-200 px-4 py-2">
           <div className="text-2xl text-center py-2">Filter</div>
           <div className="py-2">
-            <fieldset>
-              <legend className="text-base py-2">Country/Region</legend>
-              <MultiSelect options={countryOptions} name="country"
-                onChange={(selected) => console.log(selected)}
-              />
-            </fieldset>
+            <legend className="text-lg py-3">Country/Region</legend>
+            <MultiSelect options={countryOptions} name="country"
+              onChange={(selected) => console.log(selected)}
+            />
           </div>
           <div className="py-2">
-            <legend className="text-base py-2">Period</legend>
-            <MultiRangeSlider min={0} max={60 * 24}
+            <legend className="text-lg py-3">Period</legend>
+            <MultiRangeSlider min={0} max={60 * 24} name="period"
               onChange={(min, max) => console.log(min, max)}
               format={val => {
                 const hour = (Math.floor(val / 60)).toString().padStart(2, '0')

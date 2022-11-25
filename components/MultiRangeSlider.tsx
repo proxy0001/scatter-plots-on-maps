@@ -2,6 +2,7 @@ import { ChangeEvent, useState } from 'react'
 import styles from '../styles/MultiRangeSlider.module.css'
 
 interface MultiRangeSliderProps {
+    name?: string
     min?: number
     max?: number 
     onChange?: (min: number, max: number) => void
@@ -10,8 +11,13 @@ interface MultiRangeSliderProps {
 
 type onChange = (event: ChangeEvent<HTMLInputElement>) => void
 
-const MultiRangeSlider = (props: MultiRangeSliderProps) => {
-    const { min: defaultMin = 0,max: defaultMax = 60 * 24, onChange, format } = props
+const MultiRangeSlider = ({
+    min: defaultMin = 0,
+    max: defaultMax = 60 * 24,
+    name = '',
+    onChange,
+    format,
+}: MultiRangeSliderProps) => {
     const [min, setMin] = useState<number>(defaultMin)
     const [max, setMax] = useState<number>(defaultMax)
     
@@ -35,17 +41,17 @@ const MultiRangeSlider = (props: MultiRangeSliderProps) => {
     return <div className="MultiRangeSlider">
         <div className="h-4 relative flex items-center">
             <div className="relative w-full h-full flex items-center mx-2">
-                <div className="absolute w-full h-1.5 rounded bg-gray-50"></div>
+                <div className="absolute w-full h-1.5 rounded bg-gray-100"></div>
                 <div className="absolute w-full h-1.5 rounded bg-green-400" style={{width: `${computeRangePercent(max - min)}%`, marginLeft: `${computeRangePercent(min - defaultMin)}%`}}></div>
-                <div className={`w-full top-5 -left-[50%] text-xs absolute text-center ${needSwitchThumbIndex() ? 'z-10' : ''}`} style={{marginLeft: `${computeRangePercent(min - defaultMin)}%`}}>
+                <div className={`text-gray-700 w-full top-5 -left-[50%] text-xs absolute text-center ${needSwitchThumbIndex() ? 'z-10' : ''}`} style={{marginLeft: `${computeRangePercent(min - defaultMin)}%`}}>
                     {display(min)}
                 </div>
-                <div className={`w-full top-5 -right-[50%] text-xs absolute text-center ${needSwitchThumbIndex() ? 'z-10' : ''}`} style={{marginRight: `${computeRangePercent(defaultMax - max)}%`}}>
+                <div className={`text-gray-700 w-full top-5 -right-[50%] text-xs absolute text-center ${needSwitchThumbIndex() ? 'z-10' : ''}`} style={{marginRight: `${computeRangePercent(defaultMax - max)}%`}}>
                     {display(max)}
                 </div>
             </div>
-            <input type="range" className={`${styles.thumb} absolute h-0 w-full ${needSwitchThumbIndex() ? 'z-10' : ''}`} min={defaultMin} max={defaultMax} value={min} onChange={onMinChange}></input>
-            <input type="range" className={`${styles.thumb} absolute h-0 w-full`} min={defaultMin} max={defaultMax} value={max} onChange={onMaxChange}></input>
+            <input type="range" className={`${styles.thumb} absolute h-0 w-full ${needSwitchThumbIndex() ? 'z-10' : ''}`} min={defaultMin} max={defaultMax} name={name} value={min} onChange={onMinChange}></input>
+            <input type="range" className={`${styles.thumb} absolute h-0 w-full`} min={defaultMin} max={defaultMax} name={name} value={max} onChange={onMaxChange}></input>
         </div>
     </div>
 }
