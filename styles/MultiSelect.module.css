@@ -5,7 +5,7 @@
 /* Checkbox un-checked style */
 .input[type="checkbox"]:before,
 .input[type="checkbox"]:checked:before {
-    @apply flex items-center justify-center text-transparent w-4 h-4 mr-1.5 rounded-md border border-gray-700;
+    @apply flex items-center justify-center text-transparent text-sm w-4 h-4 mr-1.5 rounded-md border border-gray-700;
     content: '\2713';
 }
 
@@ -15,7 +15,7 @@
 }
 
 /* Adding a dotted border around the active tabbed-into checkbox */
-.input[type="checkbox"]:focus:before,
+/* .input[type="checkbox"]:focus:before, */
 .input[type="checkbox"]:not(:disabled):hover:before {
     @apply shadow-sm shadow-gray-400;
 }
