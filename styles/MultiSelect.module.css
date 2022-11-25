@@ -1,0 +1,27 @@
+.input[type="checkbox"] {
+    @apply appearance-none;
+}
+
+/* Checkbox un-checked style */
+.input[type="checkbox"]:before,
+.input[type="checkbox"]:checked:before {
+    @apply flex items-center justify-center text-transparent w-4 h-4 mr-1.5 rounded-md border border-gray-700;
+    content: '\2713';
+}
+
+/* Checked checkbox style (in this case the background is red) */
+.input[type="checkbox"]:checked:before {
+    @apply text-gray-700 bg-green-300;
+}
+
+/* Adding a dotted border around the active tabbed-into checkbox */
+.input[type="checkbox"]:focus:before,
+.input[type="checkbox"]:not(:disabled):hover:before {
+    @apply shadow-sm shadow-gray-400;
+}
+
+
+/* Disabled checkbox styles */
+.input[type="checkbox"]:disabled {
+    @apply cursor-default opacity-30;
+}
