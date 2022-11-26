@@ -43,10 +43,10 @@ const MultiRangeSlider = ({
             <div className="relative w-full h-full flex items-center mx-2">
                 <div className="absolute w-full h-1.5 rounded bg-gray-100"></div>
                 <div className="absolute w-full h-1.5 rounded bg-green-400" style={{width: `${computeRangePercent(max - min)}%`, marginLeft: `${computeRangePercent(min - defaultMin)}%`}}></div>
-                <div className={`text-gray-700 w-full top-5 -left-[50%] text-xs absolute text-center ${needSwitchThumbIndex() ? 'z-10' : ''}`} style={{marginLeft: `${computeRangePercent(min - defaultMin)}%`}}>
+                <div className={`text-gray-700 top-5 -translate-x-1/2 left-0 text-xs absolute text-center ${needSwitchThumbIndex() ? 'z-10' : ''}`} style={{marginLeft: `${computeRangePercent(min - defaultMin)}%`}}>
                     {display(min)}
                 </div>
-                <div className={`text-gray-700 w-full top-5 -right-[50%] text-xs absolute text-center ${needSwitchThumbIndex() ? 'z-10' : ''}`} style={{marginRight: `${computeRangePercent(defaultMax - max)}%`}}>
+                <div className={`text-gray-700 top-5 translate-x-1/2 right-0 text-xs absolute text-center ${needSwitchThumbIndex() ? 'z-10' : ''}`} style={{marginRight: `${computeRangePercent(defaultMax - max)}%`}}>
                     {display(max)}
                 </div>
             </div>
