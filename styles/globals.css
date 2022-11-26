@@ -28,3 +28,7 @@ a {
     background: black;
   }
 }
+
+.mapboxgl-control-container {
+  @apply text-xs text-center w-full absolute bottom-1 text-stone-400;
+}
