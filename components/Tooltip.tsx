@@ -6,9 +6,10 @@ export interface TooltipProps {
     enabled?: boolean,
     children?: React.ReactNode,
     position: Position,
+    maxWidth?: string,
 }
 
-export const Tooltip = ({enabled = true, position, children}: TooltipProps) => {
+export const Tooltip = ({enabled = true, maxWidth = '300px', position, children}: TooltipProps) => {
     return <Fragment>
         {enabled && <Popup
             longitude={position[0]}
@@ -17,7 +18,8 @@ export const Tooltip = ({enabled = true, position, children}: TooltipProps) => {
             closeButton={false}
             closeOnClick={false}
             anchor="bottom"
-            className="fixed top-0 left-0 transform-none bg-stone-200 after:content-[''] after:absolute after:top-full after:left-1/2 after:-ml-2.5 after:border-[6px] after:border-solid after:border-transparent after:border-t-stone-400"
+            maxWidth={maxWidth}
+            className="fixed top-0 left-0 transform-none min-w-xs p-3 z-10 bg-gray-700 text-stone-200 rounded drop-shadow-sm after:content-[''] after:absolute after:top-full after:left-1/2 after:-ml-2.5 after:border-[6px] after:border-solid after:border-transparent after:border-t-gray-700"
         >
             {children}
         </Popup>}

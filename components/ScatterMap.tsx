@@ -1,34 +1,33 @@
 
-import { useState, useRef, useEffect, useCallback } from 'react'
-import { default as mapboxgl, Map, ViewStateChangeEvent, Source, SourceProps, Layer, LayerProps, MapRef, LngLatBoundsLike, ViewState } from 'react-map-gl'
-import { FeatureCollection, Feature, Position } from 'geojson'
+import { useState, useRef, useEffect, useCallback, Fragment } from 'react'
+import { Map, ViewStateChangeEvent, MapLayerMouseEvent, Source, SourceProps, Layer, LayerProps, MapRef, LngLatBoundsLike, LngLatLike, ViewState, Popup, PopupProps, PopupEvent } from 'react-map-gl'
+import { FeatureCollection, Feature, Position, GeoJsonProperties, Point } from 'geojson'
 import sampleData from '../sampleData.json' assert {type: 'json'}
-import defaultColors from 'tailwindcss/colors'
+import { palette, Codes } from '../utils/palette'
+import Tooltip from './Tooltip'
 
-const colors: string[] = Object.keys(defaultColors)
-    .filter((k: string) => typeof defaultColors[k as keyof typeof defaultColors] === 'object')
-    .reduce((acc: string[], cur:string): string[] => {
-        acc.push(defaultColors[cur as keyof typeof defaultColors][400])
+const NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN
+
+const circleColor: mapboxgl.Expression = (() => {
+    const colours: Codes = palette.all(400)
+    const countryOrder = ['Taiwan', 'China', 'Hong Kong', 'Japen', 'Korean', 'Others']
+    const countryColors = countryOrder.reduce((acc: string[], cur: string, idx: number): string[] => {
+        acc.push(cur, colours.jumpget(idx, countryOrder.length))
         return acc
     }, [])
-    .sort((a, b) => a > b ? -1 : 1)
+    return [
+        'match',
+        ['get', 'homeCountry'],
+        ...countryColors,
+        // default color
+        colours.jumpget(countryOrder.length, countryOrder.length)
+    ]
+})()
 
-const countryOrder: any[] = ['Taiwan', 'China', 'Hong Kong', 'Japen', 'Korean', 'Others']
-const countryColors: mapboxgl.Expression = countryOrder.reduce((acc: string[], cur: string, idx: number, ary: string[]): string[] => {
-    acc.push(cur, colors[idx * countryOrder.length % colors.length])
-    if (idx === countryOrder.length - 1) acc.push(colors[(idx + 1) * countryOrder.length % colors.length])
-    return acc
-}, [])
-const circleColor: mapboxgl.Expression = [
-    'match',
-    ['get', 'homeCountry'],
-    ...countryColors,
-]
-
-console.log(circleColor)
 interface MapProps {
 
 }
+
 const mockData = sampleData
 
 const mockFeatures = mockData.map((d): Feature => ({
@@ -64,6 +63,7 @@ const sourceProps: SourceProps = {
     id: "imei",
     type: "geojson",
     data: geojson,
+    generateId: true,
 }
 
 const layerProps: LayerProps = {
@@ -79,8 +79,17 @@ const layerProps: LayerProps = {
                 [22, 180]
             ]
         },
-        'circle-color': circleColor
+        'circle-color': circleColor,
     }
+}
+
+const defaultViewState: ViewState = {
+    longitude: 0,
+    latitude: 0,
+    zoom: 0,
+    bearing: 0,
+    pitch: 0,
+    padding: {left: 0, right: 0, top: 0, bottom: 0}
 }
 
 const initialViewState = {
@@ -90,48 +99,97 @@ const initialViewState = {
     }
 }
 
-const ScatterMap = ({ }: MapProps) => {
+type TooltipInfo = {
+    city?: string,
+    homeCountry?: string,
+    imei?: string,
+    unixTimestamp?: string,
+}
+
+type RGBA = {r: number, g: number, b: number, a: number}
+
+type HoverInfo = {
+    lon: number,
+    lat: number,
+    properties: TooltipInfo,
+    featureId: Feature['id'],
+    circleColor: RGBA | undefined
+}
+
+const rgba2hex = (rgba: RGBA): string => {
+    const r = Math.round(Math.round(rgba.r * 100) / 100 * 255)
+    const g = Math.round(Math.round(rgba.g * 100) / 100 * 255)
+    const b = Math.round(Math.round(rgba.b * 100) / 100 * 255)
+    const a = Math.round(Math.round(rgba.a * 100) / 100 * 255)
+    return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1) + (a + 0x10000).toString(16).slice(-2).toUpperCase()
+}
+
+const timestampFormatter = (timestamp: string | number) => {
+    const tzoffset = (new Date()).getTimezoneOffset() * 60000
+    return new Date(timestamp as number * 1000 - tzoffset).toISOString().slice(0, 19).replace(/-/g, '/').replace('T', ' ').replace(/:\d{2}$/, '');
+}
+
+const defaultHoverInfo: HoverInfo = {
+    lon: 0,
+    lat: 0,
+    properties: {},
+    featureId: undefined,
+    circleColor: undefined,
+}
+
+
+const ScatterMap = ({}: MapProps) => {
     const mapRef = useRef<MapRef>(null)
-    const [viewState, setViewState] = useState<ViewState>({
-        longitude: 0,
-        latitude: 0,
-        zoom: 0,
-        bearing: 0,
-        pitch: 0,
-        padding: {left: 0, right: 0, top: 0, bottom: 0}
-    })
-    const onMapLoad = useCallback(() => {
-        // mapRef.current?.fitBounds()
-        console.log('useCallback', mapRef.current)
-        // mapRef && mapRef.current && mapRef.current.on('move', () => {
-        //   // do something
-        // })
-    }, []);
-    useEffect(() => {
-        // console.log(mapRef.current)
-    })
-    const onMove:(e: ViewStateChangeEvent) => void = evt => {
-        console.log('onMove', evt.viewState)
-        setViewState(evt.viewState)
+    const [viewState, setViewState] = useState<ViewState>(defaultViewState)
+    const [showTooltip, setShowTooltip] = useState(false)
+    const [hoverInfo, setHoverInfo] = useState<HoverInfo>(defaultHoverInfo)
+    const {city, homeCountry, imei, unixTimestamp}: TooltipInfo = hoverInfo.properties
+
+    const toggleTooltip = (state: boolean, hoverInfo: HoverInfo = defaultHoverInfo): void => {
+        if (state === undefined) state = !showTooltip
+        if (!state) setHoverInfo(defaultHoverInfo)
+        else setHoverInfo(hoverInfo)
+        setShowTooltip(state)
     }
-    const onZoom:(e: ViewStateChangeEvent) => void = evt => {
-        console.log('onZoom', evt.viewState)
-        setViewState(evt.viewState)
+
+    const onMouseMove: (evt: MapLayerMouseEvent) => void = evt => {
+        const newFeature: Feature | undefined = evt.features && evt.features[0]
+        if (newFeature === undefined) return toggleTooltip(false)
+        if (newFeature.id === hoverInfo.featureId) return
+        const featureId: Feature['id'] = newFeature.id
+        const properties: HoverInfo['properties'] = newFeature.properties || {}
+        const [lon, lat]: Position = (newFeature.geometry as Point).coordinates
+        const geoJsonProperties = newFeature as GeoJsonProperties
+        const circleColor = geoJsonProperties && geoJsonProperties.layer.paint['circle-color']
+        toggleTooltip(true, { lon, lat, properties, featureId, circleColor })
     }
-    return <div className="w-full h-full">
+
+    return <div className="w-full h-full relative">
         <Map
             ref={mapRef}
             initialViewState={initialViewState}
-            mapboxAccessToken={process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN}
+            mapboxAccessToken={NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN}
             // {...viewState}
-            onLoad={onMapLoad}
-            onMove={onMove}
-            onZoom={onZoom}
+            onMouseMove={onMouseMove}
+            interactiveLayerIds={['point']}
             mapStyle="mapbox://styles/mapbox/light-v11"
         >
             <Source {...sourceProps}>
                 <Layer {...layerProps} />
             </Source>
+            <Tooltip enabled={showTooltip} position={[hoverInfo.lon, hoverInfo.lat]}>
+                <div className="text-base my-1.5 flex items-center">
+                    {homeCountry && (
+                        <Fragment>
+                            <div className={`rounded-full w-4 h-4 bg-gray-700 border-2 border-stone-200 mr-1.5`}
+                                style={hoverInfo.circleColor ? {backgroundColor: rgba2hex(hoverInfo.circleColor)} : {}}></div>
+                            <div>{homeCountry}</div>
+                        </Fragment>
+                    )}
+                </div>
+                <div className="text-[13px] my-1 break-all">{imei}</div>
+                <div className="text-[13px] my-1">{unixTimestamp && timestampFormatter(unixTimestamp)}</div>
+            </Tooltip>
         </Map>
     </div>
 }
