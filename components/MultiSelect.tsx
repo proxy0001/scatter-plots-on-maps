@@ -1,20 +1,20 @@
 import { ChangeEvent, useState } from 'react'
 import styles from '../styles/MultiSelect.module.css'
+import { OnChange } from '../@types/app'
 
-type onChange = (event: ChangeEvent<HTMLInputElement>) => void
-type selected = Set<string>
-type option = {value: string, text: string, defaultChecked?: boolean, disabled?: boolean}
+export type Selected = Set<string>
+export type Option = {value: string, text: string, defaultChecked?: boolean, disabled?: boolean}
 
-interface MultiSelectProps {
+export interface MultiSelectProps {
     name?: string
-    options?: Array<option>
-    onChange?: (selected: selected) => void
+    options?: Option[]
+    onChange?: (selected: Selected) => void
 }
 
-const MultiSelect = ({ name = '', options = [], onChange }: MultiSelectProps) => {
-    const defaultSelected = options.reduce((acc: selected, cur: option) => cur.defaultChecked ? acc.add(cur.value) : acc, new Set())
-    const [selected, setSelected] = useState<selected>(defaultSelected)
-    const onInputChange: (value: string) => onChange = value => {
+export const MultiSelect = ({ name = '', options = [], onChange }: MultiSelectProps) => {
+    const defaultSelected = options.reduce((acc: Selected, cur: Option) => cur.defaultChecked ? acc.add(cur.value) : acc, new Set())
+    const [selected, setSelected] = useState<Selected>(defaultSelected)
+    const onInputChange: (value: string) => OnChange = value => {
         return event => {
             const newSelected = new Set(selected)
             event.target.checked ? newSelected.add(value) : newSelected.delete(value)

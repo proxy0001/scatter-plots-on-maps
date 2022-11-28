@@ -1,8 +1,8 @@
-import defaultColors from 'tailwindcss/colors'
 /**
- * use these colors easily
+ * use colors from tailwind
  * https://tailwindcss.com/docs/customizing-colors
  */
+import defaultColors from 'tailwindcss/colors'
 
 export type Shade = '50' | '100' | '200' | '300' | '400' | '500' | '600' | '700' | '800' | '900' | 50 | 100 | 200 | 300 | 400 | 500 | 600 | 700 | 800 | 900
 export type Names = string[]
@@ -21,14 +21,15 @@ export const palette = (() => {
     const generator = (names: Names) => {
         return (shade: Shade = 700): Codes => {
             const codes = names.map((name: string) => defaultColors[name as keyof typeof defaultColors][shade])
-                .sort((a, b) => a > b ? -1 : 1)
             const proxy = new Proxy(codes, {
                 get: (target, name) => Reflect.get(target, parseInt(name as string) % target.length),
             })
             return {
-                data: proxy,
+                data: codes,
                 get: (i: number) => proxy[i],
-                jumpget: (idx: number, span: number = 1, offset: number = 0) => proxy[offset + idx * span]
+                jumpget: (idx: number, span: number = 1, offset: number = 0) => {
+                    return proxy[offset + idx * span]
+                }
             }
         }
     }

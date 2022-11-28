@@ -19,7 +19,7 @@ export const Tooltip = ({enabled = true, maxWidth = '300px', position, children}
             closeOnClick={false}
             anchor="bottom"
             maxWidth={maxWidth}
-            className="fixed top-0 left-0 transform-none min-w-xs p-3 z-10 bg-gray-700 text-stone-200 rounded drop-shadow-sm after:content-[''] after:absolute after:top-full after:left-1/2 after:-ml-2.5 after:border-[6px] after:border-solid after:border-transparent after:border-t-gray-700"
+            className="fixed top-0 left-0 transform-none min-w-xs px-3 pt-1 pb-1.5 z-10 bg-gray-700 text-stone-200 rounded drop-shadow-sm after:content-[''] after:absolute after:top-full after:left-1/2 after:-ml-2.5 after:border-[6px] after:border-solid after:border-transparent after:border-t-gray-700"
         >
             {children}
         </Popup>}

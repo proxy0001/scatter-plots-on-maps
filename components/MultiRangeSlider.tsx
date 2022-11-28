@@ -1,7 +1,8 @@
 import { ChangeEvent, useState } from 'react'
 import styles from '../styles/MultiRangeSlider.module.css'
+import { OnChange } from '../@types/app'
 
-interface MultiRangeSliderProps {
+export interface MultiRangeSliderProps {
     name?: string
     min?: number
     max?: number 
@@ -9,9 +10,7 @@ interface MultiRangeSliderProps {
     format?: (val: number) => string
 }
 
-type onChange = (event: ChangeEvent<HTMLInputElement>) => void
-
-const MultiRangeSlider = ({
+export const MultiRangeSlider = ({
     min: defaultMin = 0,
     max: defaultMax = 60 * 24,
     name = '',
@@ -25,17 +24,17 @@ const MultiRangeSlider = ({
     const needSwitchThumbIndex = ():boolean => computeRangePercent(max - min) < 10 && computeRangePercent(max) > 90
     const display = (val: number): string => typeof format === 'function' ? format(val) : `${val}`
 
-    const onMinChange:onChange = event => {
+    const onMinChange:OnChange = event => {
         const newMin: number = parseInt(event.target.value)
         if (newMin >= max) return
         setMin(newMin)
         if (typeof onChange === 'function') onChange(newMin, max)
     }
-    const onMaxChange:onChange = event => {
+    const onMaxChange:OnChange = event => {
         const newMax: number = parseInt(event.target.value)
         if (newMax <= min) return
         setMax(newMax)
-        if (typeof onChange === 'function') onChange(newMax, min)
+        if (typeof onChange === 'function') onChange(min, newMax)
     }
 
     return <div className="MultiRangeSlider">

@@ -1,0 +1,1 @@
+export type OnChange = (event: ChangeEvent<HTMLInputElement>) => void
