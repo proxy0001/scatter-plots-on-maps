@@ -1,6 +1,6 @@
 
 import { useState, Fragment } from 'react'
-import { Map, MapLayerMouseEvent, Source, SourceProps, Layer, LayerProps, LngLatBoundsLike, ViewState, InitialViewState } from 'react-map-gl'
+import { Map, MapLayerMouseEvent, Source, SourceProps, Layer, LayerProps, LngLatBoundsLike, MapProps } from 'react-map-gl'
 import { Feature, Position, GeoJsonProperties, Point } from 'geojson'
 import { palette, Codes } from '../utils/palette'
 import Tooltip from './Tooltip'
@@ -73,7 +73,7 @@ const computeCircleColor = (categoryName: string, categoryItems: string[]): mapb
     ]
 }
 
-const genInitialViewState = (scatterMapProps: ScatterMapProps): InitialViewState => {
+const genInitialViewState = (scatterMapProps: ScatterMapProps): MapProps['initialViewState'] => {
     return {
         bounds: computeBounds(scatterMapProps),
         fitBoundsOptions: {
