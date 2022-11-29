@@ -59,7 +59,7 @@ export default function Home() {
     newFilter = filterProducer.addFilter(3, '<=', 'minutes', max)
     setFilter(newFilter as ScatterMapProps['filter'])
   }
-  const onMouseIn: ScatterMapProps['onMouseIn'] = (hoverInfo: HoverInfo) => {
+  const onMouseOn: ScatterMapProps['onMouseOn'] = (hoverInfo: HoverInfo) => {
     setHoverInfo(hoverInfo)
   }
   const onMouseOut: ScatterMapProps['onMouseOut'] = () => {
@@ -82,23 +82,24 @@ export default function Home() {
             categoryName={categoryName}
             categoryItems={category}
             propertiesHandler={propertiesHandler}
-            onMouseIn={onMouseIn}
+            onMouseOn={onMouseOn}
             onMouseOut={onMouseOut}
-          >
-            <Fragment>
-              <div className="text-base my-1.5 flex items-center">
-                {homeCountry && (
-                  <Fragment>
-                    <div className={`rounded-full w-4 h-4 bg-gray-700 border-2 border-stone-200 mr-1.5`}
-                      style={hoverInfo.circleColor ? {backgroundColor: rgba2hex(hoverInfo.circleColor)} : {}}></div>
-                    <div>{homeCountry}</div>
-                  </Fragment>
-                )}
-              </div>
-              <div className="text-[13px] my-1 break-all">{imei}</div>
-              <div className="text-[13px] my-1">{unixTimestamp && timestampFormatter(unixTimestamp)}</div>
-            </Fragment>
-          </ScatterMap>
+            tooltipContent={
+              <Fragment>
+                <div className="text-base my-1.5 flex items-center">
+                  {homeCountry && (
+                    <Fragment>
+                      <div className={`rounded-full w-4 h-4 bg-gray-700 border-2 border-stone-200 mr-1.5`}
+                        style={hoverInfo.circleColor ? {backgroundColor: rgba2hex(hoverInfo.circleColor)} : {}}></div>
+                      <div>{homeCountry}</div>
+                    </Fragment>
+                  )}
+                </div>
+                <div className="text-[13px] my-1 break-all">{imei}</div>
+                <div className="text-[13px] my-1">{unixTimestamp && timestampFormatter(unixTimestamp)}</div>
+              </Fragment>
+            }
+          />
         </div>
         <aside className="fixed top-0 right-0 w-64 h-full flex flex-col bg-stone-200 px-4 py-2">
           <div className="text-2xl text-center pt-1 pb-2 text-gray-700">Filter</div>

@@ -7,16 +7,17 @@ import Tooltip from './Tooltip'
 import { RGBA } from '../@types/app'
 
 export interface ScatterMapProps {
-    data: any[]
-    filter?: mapboxgl.Expression
-    categoryItems?: string[]
-    categoryName?: string
-    getLongitude?: (d: object) => number
-    getLatitude?: (d: object) => number
-    propertiesHandler?: (d: object) => object
-    children?: React.ReactNode
-    onMouseIn?: (hoverInfo: HoverInfo) => void
-    onMouseOut?: () => void
+    data: any[] // array of objects
+    filter?: mapboxgl.Expression // to filter points
+    categoryItems?: string[] // In order to make different categories appear in different colors
+    categoryName?: string // the key that represent categories in the properties
+    getLongitude?: (d: object) => number // how to get logitude from each object in data array
+    getLatitude?: (d: object) => number // how to get latitude from each object in data array
+    propertiesHandler?: (d: object) => object // convert each object in the data array into properties that will be fed into the point layer in ScatterMap
+    children?: React.ReactNode 
+    tooltipContent?: React.ReactNode // for the tooltip content
+    onMouseOn?: (hoverInfo: HoverInfo) => void // when mouse hover on the point
+    onMouseOut?: () => void // when mouse hover out the point
 }
 
 export type HoverInfo = {
@@ -122,9 +123,10 @@ export const ScatterMap = ({
     getLongitude = (d: object) => d['lon' as keyof typeof d],
     getLatitude = (d: object) => d['lat' as keyof typeof d],
     propertiesHandler = (d: object) => ({}),
-    onMouseIn,
+    onMouseOn,
     onMouseOut,
     children,
+    tooltipContent,
 }: ScatterMapProps) => {
     const props = {data, filter, categoryName, categoryItems, getLongitude, getLatitude, propertiesHandler}
     const sourceProps = genSourceProps(props)
@@ -138,7 +140,7 @@ export const ScatterMap = ({
     const toggleTooltip = (state: boolean, hoverInfo: HoverInfo = defaultHoverInfo): void => {
         if (state === undefined) state = !showTooltip
         if (!state && onMouseOut) onMouseOut()
-        else if (onMouseIn) onMouseIn(hoverInfo)
+        else if (onMouseOn) onMouseOn(hoverInfo)
         setShowTooltip(state)
     }
 
@@ -164,11 +166,12 @@ export const ScatterMap = ({
             interactiveLayerIds={['point']}
             mapStyle="mapbox://styles/mapbox/light-v11"
         >
+            {children}
             <Source {...sourceProps}>
                 <Layer {...layerProps} />
             </Source>
             <Tooltip enabled={showTooltip} position={[tooltipPosition[0], tooltipPosition[1]]}>
-                {children}
+                {tooltipContent}
             </Tooltip>
         </Map>
     </div>
