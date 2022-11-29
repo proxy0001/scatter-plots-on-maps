@@ -1,5 +1,10 @@
 import { RGBA } from '../@types/app'
-
+/**
+ * 
+ * @param rgba 
+ * @returns 
+ * https://stackoverflow.com/questions/49974145/how-to-convert-rgba-to-hex-color-code-using-javascript
+ */
 export const rgba2hex = (rgba: RGBA): string => {
     const r = Math.round(Math.round(rgba.r * 100) / 100 * 255)
     const g = Math.round(Math.round(rgba.g * 100) / 100 * 255)
@@ -7,7 +12,12 @@ export const rgba2hex = (rgba: RGBA): string => {
     const a = Math.round(Math.round(rgba.a * 100) / 100 * 255)
     return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1) + (a + 0x10000).toString(16).slice(-2).toUpperCase()
 }
-
+/**
+ * 
+ * @param timestamp 
+ * @returns 
+ * https://stackoverflow.com/questions/847185/convert-a-unix-timestamp-to-time-in-javascript
+ */
 export const timestampFormatter = (timestamp: string | number) => {
     const tzoffset = (new Date()).getTimezoneOffset() * 60000
     return new Date(timestamp as number * 1000 - tzoffset).toISOString().slice(0, 19).replace(/-/g, '/').replace('T', ' ').replace(/:\d{2}$/, '');
@@ -23,7 +33,6 @@ export const unixTimestampToMinutes = (unixTimestamp: number) => {
 export const filterProducer = (() => {
     const combiningCondition = 'all'
     const filters: any[] = []
-    let combiningFilters = undefined
 
     const genFilter: (...args: any[]) => any[] | undefined = (operator, key, ...values) => {
         if (!operator) return undefined
@@ -40,6 +49,14 @@ export const filterProducer = (() => {
         ].concat(filters.filter(x => x !== undefined))
         return [...result]
     }
+    /**
+     * 
+     * @param idx 條件要放在第幾位，如果對同樣位子增加條件的話，會覆寫該位子的條件。
+     * @param args 後面要照 expression 的順序放入，有兩種不同的狀況，如果沒有 key，就放入 undefined。
+     *  1. operator, property key, value1, value2 ,...
+     *  2. operator, value1, value2, ...
+     * @returns 
+     */
     const addFilter = (idx: number, ...args: any[]): any[] => {
         const filter = genFilter(...args)
         filters[idx] = filter
@@ -50,7 +67,6 @@ export const filterProducer = (() => {
         return combineFilters()
     }
     return {
-        combiningFilters,
         addFilter,
         deleteFilter,
     }

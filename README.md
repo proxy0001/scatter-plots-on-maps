@@ -21,6 +21,14 @@
 - 確認效能是否有正確提升
 
 
+## 第一週小結
+
+[Online Demo](https://scatter-plots-on-maps.vercel.app/)
+基本只完成了第一個目標：學習使用新工具建構 Scatter Map，第二個目標都沒有動到。幾個心得如下：
+1. TypeScript 是大魔王，要找時間好好學習。
+2. Tailwind 用起來很方便，但是那個 style 都擠在 class 裡面，不太好看，也很容易跟其他東西搞在一起。有些情況用 css 處理感覺還是比較順手，寫作風格還要再想一下。可以將 style 進行模組化，但目前沒太多琢磨這塊。
+3. React 的生命週期與原理可以再看熟悉一點。
+
 
 ## 每日進度紀錄
 
@@ -202,8 +210,46 @@ import { Map, ViewStateChangeEvent, Source, SourceProps, Layer, LayerProps } fro
 #### 接下來是根據資料改變 circle 的顏色！
 首先根據格式定義將其他屬性放到 properties 裡面，然後照著這個[範例](https://docs.mapbox.com/mapbox-gl-js/example/data-driven-circle-colors/)學習設置，主要就是看 paint 的部分，然後去找 react-map-gl 對應的輸入格式定義即可，但我卡最久的還是在 TypeScript 的各種報錯，當用一些 function 去動態產生 props 的時候，遇到了許多次沒有正確定義好格式的狀況，導致一直需要去查看細節的格式定義是什麼，然後乖乖定義好各個步驟之間的輸入跟輸出的 type，不能有衝突，這部分滿需要加強 TypeScript 的基礎概念的。
 
-然後還自作孽地去導入 tailwind 的 colors，動態產生不同類別的對應顏色，其中一直報錯的地方就是當我們使用 Object.keys() 對 Object 進行 for loop 操作時，使用 obj[key] 去取得對應值時，TypeScript 就會報錯，原因是 string 這個 Type 不能當作索引使用，也就是說我們需要知道 這些 Keys 除了 string 之外的合法 Type。解決方法是，先用 typeof 取得 Ojbect 所有的 types，然後再用 keyof 將其轉換成 union of literal types，就是 Keys 的 Type 了，詳細可以看[這篇](https://stackoverflow.com/questions/57086672/element-implicitly-has-an-any-type-because-expression-of-type-string-cant-b)跟[這篇](https://juejin.cn/post/7023238396931735583)
+然後導入 tailwind 的 colors，動態產生不同類別的對應顏色時還一直報錯，主要就是當我們使用 Object.keys() 對 Object 進行 for loop 操作時，使用 obj[key] 去取得對應值時，TypeScript 就會報錯，原因是 string 這個 Type 不能當作索引使用，也就是說我們需要知道 這些 Keys 除了 string 之外的合法 Type。解決方法是，先用 typeof 取得 Ojbect 所有的 types，然後再用 keyof 將其轉換成 union of literal types，就是 Keys 的 Type 了，詳細可以看[這篇](https://stackoverflow.com/questions/57086672/element-implicitly-has-an-any-type-because-expression-of-type-string-cant-b)跟[這篇](https://juejin.cn/post/7023238396931735583)
 
+#### 實現 Tooltip
+基本上用 react-map-gl 的 [Popup](https://visgl.github.io/react-map-gl/docs/api-reference/popup) 搭配 Map 的 [onMouseMove](https://visgl.github.io/react-map-gl/docs/api-reference/map#onmousemove) 一起實現。另外包了一個 Tooltip，裡面的 Content 由外部提供。有一個地方要注意，在 Map 要指定 interactiveLayerIds ，這裡要放我們畫 Point 的 Layer ID。上面有設置的話，event 裡面就會有一或多個叫 [Feature](https://docs.mapbox.com/help/glossary/features/) 的東西，就是我們現在碰到的 Points。然後將當前的座標位置記錄下來，傳給 tooltip 讓他知道要基於哪個座標顯示。
+
+用 Popup 的時候，他初始的位置老是跑在很奇怪的地方，搞不太懂為什麼，後來就自己加 CSS 處理了。
+
+```typescript
+<Popup
+    longitude={position[0]}
+    latitude={position[1]}
+    offset={[4, -12]}
+    anchor="bottom"
+    maxWidth={maxWidth}
+    className="fixed top-0 left-0 transform-none ..."
+/>
+```
+
+然後就是 onMouseMove 得到的座標會是當前滑鼠的位置，如果把這個直接傳給 tooltip，就會發生 Tooltip 有點飄離 Point 的感覺。所以後來就加了一層判斷，如果當前的 Feature 跟 之前的一樣，就不要改變位置，並且改從 Feature 裡面拿他的座標，丟給 Tooltip。為了方便判斷，我們輸入 Source 的時候，將 generateId 設為 true, 就可以比較前後的 feature.id 是否一致。
+
+```typescript
+const [showTooltip, setShowTooltip] = useState(false)
+const [lastId, setLastId] = useState<number | null>(null)
+const [tooltipPosition, setTooltipPosition] = useState<Position>([0, 0])
+
+const onMouseMove: (evt: MapLayerMouseEvent) => void = evt => {
+    const newFeature: Feature | undefined = evt.features && evt.features[0]
+    if (newFeature === undefined) return toggleTooltip(false)
+    if (newFeature.id === lastId) return
+    const featureId: Feature['id'] = newFeature.id
+    const properties: HoverInfo['properties'] = newFeature.properties || {}
+    const [lon, lat]: Position = (newFeature.geometry as Point).coordinates
+    const geoJsonProperties = newFeature as GeoJsonProperties
+    const circleColor = geoJsonProperties && geoJsonProperties.layer.paint['circle-color']
+    setTooltipPosition([lon, lat])
+    setLastId(newFeature.id as number)
+    toggleTooltip(true, { lon, lat, properties, featureId, circleColor })
+}
+
+```
 
 #### 其他收穫
 - [How to import a JSON file in JavaScript (ES6 Modules)](https://bobbyhadz.com/blog/javascript-import-json-file)
@@ -212,6 +258,110 @@ import { Map, ViewStateChangeEvent, Source, SourceProps, Layer, LayerProps } fro
     [longitude: max/min +180 to -180,
     latitude: max/min +90 to -90]
     ```
+
+### Day 5 & 6
+
+主要就是做讓控制項 (Filter) 生效去影響地圖上出現的資料，以及整理 Code，調整一些細節。第一點本身不難做，就是要看一下文檔提供哪些方法，第二點主要是思考如何將邏輯拆分，各司何職。
+
+#### 讓控制項可以篩選資料
+看一下官網，mapbox-gl 有提供 Filter 的功能，針對 Layer，可以用他的 expressions 的形式輸入篩選條件，就只會呈現篩選後的資料了。[文檔](https://docs.mapbox.com/help/glossary/filter/)的範例如下：
+```typescript
+map.addLayer({
+  id: layerID,
+  type: 'symbol',
+  source: 'places',
+  layout: {
+    'icon-image': symbol + '-15',
+    'icon-allow-overlap': true
+  },
+  filter: ['==', 'icon', symbol]
+});
+```
+我們的情境下，有兩個以上的條件並存，所以還要看多條件的表達方式，[文檔](https://docs.mapbox.com/mapbox-gl-js/style-spec/other/#other-filter)在這，範例如下：
+```typescript
+[
+    "all",
+    ["==", "class", "street_limited"],
+    [">=", "admin_level", 3],
+    ["!in", "$type", "Polygon"]
+]
+```
+然後 react-map-gl 也有支援，依樣畫葫蘆輸入即可，[文檔](https://visgl.github.io/react-map-gl/docs/api-reference/layer)在此。
+
+因此我們的流程就是：
+1. 使用者從 UI 上改變條件
+2. 將條件轉換成 mapbox-gl 的 expressions 格式
+3. 用 setState 紀錄 filter 條件狀態
+4. 綁到 Layer 的組件上
+
+最麻煩的是第二點，那個 expressions 的格式比較複雜一點，我們做了一個小幫手 filterProducer 幫我們。小幫手提供增加跟減少條件的方法，回傳最終組合出的 expressions。內部會將條件存著，並處理一些格式上的差異。使用上像這樣：
+```typescript
+/**
+ * 
+ * @param idx 條件要放在第幾位，如果對同樣位子增加條件的話，會覆寫該位子的條件。
+ * @param args 後面要照 expression 的順序放入，有兩種不同的狀況，如果沒有 key，就放入 undefined。
+ *  1. operator, property key, value1, value2 ,...
+ *  2. operator, value1, value2, ...
+ * @returns 
+ */
+filterProducer.addFilter(1, 'in', 'country', ...['Taiwan', 'US'])
+filterProducer.addFilter(2, '>=', 'minutes', 300)
+filterProducer.addFilter(3, '<=', 'minutes', 1000)
+```
+
+接下來就是要把一些接口拉出來給外部控制使用。這裡就開始涉及到要怎麼拆分的問題，最主要是讓 ScactterMap 跟資料解耦，不然換一份資料，這個 Component 基本上就不能用了，復用性太糟。最終我們定義的介面如下，還可以更好，但需要再深入多看一下 TypeScript。
+
+我們期待 data 的格式是 array of objects，至於 objects 裡面有哪些 properties，我們希望 ScactterMap 不需要知道，取而代之的是，當要操作這些 properties 時，就會需要使用者提供方法。
+
+```typescript
+export interface ScatterMapProps {
+    data: any[] // array of objects
+    filter?: mapboxgl.Expression // to filter points
+    categoryItems?: string[] // In order to make different categories appear in different colors
+    categoryName?: string // the key that represent categories in the properties
+    getLongitude?: (d: object) => number // how to get logitude from each object in data array
+    getLatitude?: (d: object) => number // how to get latitude from each object in data array
+    propertiesHandler?: (d: object) => object // convert each object in the data array into properties that will be fed into the point layer in ScatterMap
+    children?: React.ReactNode 
+    tooltipContent?: React.ReactNode // for the tooltip content
+    onMouseOn?: (hoverInfo: HoverInfo) => void // when mouse hover on the point
+    onMouseOut?: () => void // when mouse hover out the point
+}
+```
+
+最後再到 index.tsx 上面，把 controller 的邏輯寫完，基本上都只需要用到 useState 跟 eventHandler 就可以完成。
+
+#### 其他的整理與拆分
+
+上面的 ScatterMap 基本拆好了，剩下的是一些零散的東西，看一下檔案結構還多了哪些
+```
+- @types
+    - app.d.ts // 放一些共用的 Type
+- components // 放 components
+- utils // 放一些小工具
+    - helper // 實在不知道要放哪了，先放這
+    - palette // 調色盤，提供 tailwind 內建的顏色組跟一些自定義的方法
+```
+
+helper 裡面就一些很單純的工具，例如 rgba -> hex 的轉換，時間格式的顯示方法與轉換方法，以及上面提到的 filterProducer。
+
+palette 本身就只是提供一些顏色組合，但是反而花了超多時間在這個上面，原本想要提供類似 Array 的方式，但東搞西搞，就是搞不出我們希望讓使用者用的方式，最後折衷換一種方式實現。最主要想要提供兩個函式，第一個達成循環取用同一組顏色的效果，第二個是跳著取用顏色的效果。原本是希望提供一個增強的 Array ，讓使用者使用，但後來實在不知道怎麼用 JavaScript Functional Inheritance 的寫法，來自定義一個自己的 Array (不改變原生 Array )，希望改寫 Array[idx] 取用資料的方式，改成循環取用，並且另外提供一個 jumpget 的 Method。是有看到如何用 Class 實現，但基於風格一致性，不太希望用到 Class。最後放棄用 Array 的方式回傳，而是回傳物件具有兩個操作方法，然後用 Proxy 去攔截 array 的 get，將輸入的 index 改為 index % length。
+
+關於這部分的一些參考文章
+- [JavaScript Inheritance without ES6 classes](https://rajeshnaroth.medium.com/javascript-inheritance-without-es6-classes-6ff546c0d58b)
+- [Getter/setter on javascript array?](https://stackoverflow.com/questions/2449182/getter-setter-on-javascript-array)
+
+#### component 一直被調用?
+
+主要就是常常會看到重複的 console.log 感到非常不解，尤其是當 setState 之後。state 改變之後，React Component 就會被調用，然後跑出 console.log。一直以為是自己寫法有問題，但從這篇看起來，好像是一種正常的情況？
+
+[Why does React call my component more times than needed?](https://stackoverflow.com/questions/68666070/why-does-react-call-my-component-more-times-than-needed)
+
+#### 其他收穫
+- [rgba2hex 的方法](https://stackoverflow.com/questions/49974145/how-to-convert-rgba-to-hex-color-code-using-javascript): 基本邏輯就是先將 0 ~ 1 的值投影成 0 ~ 255，然後再轉成 16 進位，最後依照 rgba 的順序，拼接起來。大概邏輯是這樣，但還有一些操作沒看得很明白，總之可以用了。
+- unixtimestamp 轉換的時候要 * 1000 再用
+- getTimezoneOffset 返回格林威治時間和本地時間之間的時差，以分鐘為單位。
+
 
 ## Getting Started
 This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
