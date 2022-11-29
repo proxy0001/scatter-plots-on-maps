@@ -1,10 +1,10 @@
 
-import { useState, Fragment } from 'react'
+import { useState } from 'react'
 import { Map, MapLayerMouseEvent, Source, SourceProps, Layer, LayerProps, LngLatBoundsLike, MapProps } from 'react-map-gl'
 import { Feature, Position, GeoJsonProperties, Point } from 'geojson'
 import { palette, Codes } from '../utils/palette'
 import Tooltip from './Tooltip'
-import { RGBA } from '../utils/helper'
+import { RGBA } from '../@types/app'
 
 export interface ScatterMapProps {
     data: any[]

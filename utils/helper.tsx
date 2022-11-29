@@ -1,4 +1,4 @@
-export type RGBA = {r: number, g: number, b: number, a: number}
+import { RGBA } from '../@types/app'
 
 export const rgba2hex = (rgba: RGBA): string => {
     const r = Math.round(Math.round(rgba.r * 100) / 100 * 255)
