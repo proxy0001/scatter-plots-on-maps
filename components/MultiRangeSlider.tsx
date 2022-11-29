@@ -1,4 +1,4 @@
-import { ChangeEvent, useState } from 'react'
+import { useState } from 'react'
 import styles from '../styles/MultiRangeSlider.module.css'
 import { OnChange } from '../@types/app'
 
