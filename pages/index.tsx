@@ -5,7 +5,7 @@ import { Panel } from '../components/'
 import { ScatterMap, ScatterMapProps, HoverInfo, defaultHoverInfo } from '../components/ScatterMap'
 import { MultiSelect, MultiSelectProps } from '../components/MultiSelect'
 import { MultiRangeSlider, MultiRangeSliderProps } from '../components/MultiRangeSlider'
-import { filterProducer, rgba2hex, timestampFormatter, unixTimestampToMinutes } from '../utils/helper'
+import { filterProducer, rgba2hex, timestampFormatter, unixTimestampToTimeOfDate, TimeUnit } from '../utils/helper'
 import sampleData from '../sampleData.json' assert {type: 'json'}
 
 type TooltipInfo = {
@@ -14,6 +14,35 @@ type TooltipInfo = {
   imei?: string,
   unixTimestamp?: string,
 }
+
+type periodConfig = {
+  min: number,
+  max: number,
+  unit: TimeUnit,
+  hoursHandler: (v: number) => number
+  minutesHandler: (v: number) => number
+}
+
+const periodUnit: TimeUnit = 'hour'
+const periodConfig = ((unit: TimeUnit): periodConfig => {
+  const periodConfigs = {
+    hour: {
+      min: 0,
+      max: 24,
+      unit: 'hour',
+      hoursHandler: (v: number) => v,
+      minutesHandler: (v: number) => 0
+    } as periodConfig,
+    minute: {
+      min: 0,
+      max: 60 * 24,
+      unit: 'hour',
+      hoursHandler: (v: number) => v / 60,
+      minutesHandler: (v: number) => v % 60
+    } as periodConfig,
+  }
+  return periodConfigs[unit]
+})(periodUnit)
 
 const countryOptions: MultiSelectProps['options'] = [
   {value: 'Taiwan', text: 'Taiwan', defaultChecked: true},
@@ -34,7 +63,7 @@ const propertiesHandler = (d: object) => {
     imei: d['imei' as keyof typeof d],
     homeCountry: d['homeCountry' as keyof typeof d],
     unixTimestamp: d['unixTimestamp' as keyof typeof d],
-    minutes: unixTimestampToMinutes(d['unixTimestamp' as keyof typeof d])
+    timeOfDate: unixTimestampToTimeOfDate(d['unixTimestamp' as keyof typeof d], periodUnit)
   }
 }
 
@@ -55,8 +84,8 @@ export default function Home() {
   }  
   const onRangeChange: MultiRangeSliderProps['onChange'] = (min, max) => {
     let newFilter
-    newFilter = filterProducer.addFilter(2, '>=', 'minutes', min)
-    newFilter = filterProducer.addFilter(3, '<=', 'minutes', max)
+    newFilter = filterProducer.addFilter(2, '>=', 'timeOfDate', min)
+    newFilter = filterProducer.addFilter(3, '<=', 'timeOfDate', max)
     setFilter(newFilter as ScatterMapProps['filter'])
   }
   const onMouseOn: ScatterMapProps['onMouseOn'] = (hoverInfo: HoverInfo) => {
@@ -108,11 +137,11 @@ export default function Home() {
               onChange={onMultiSelectChange}/>
           </Panel>
           <Panel title="Period">
-            <MultiRangeSlider min={0} max={60 * 24} name="period"
+            <MultiRangeSlider min={periodConfig.min} max={periodConfig.max} name="period"
               onChange={onRangeChange}
               format={val => {
-                const hour = (Math.floor(val / 60)).toString().padStart(2, '0')
-                const minute = (val % 60).toString().padStart(2, '0')
+                const hour = (Math.floor(periodConfig.hoursHandler(val))).toString().padStart(2, '0')
+                const minute = (periodConfig.minutesHandler(val)).toString().padStart(2, '0')
                 return `${hour}:${minute}`
               }}/>
           </Panel>

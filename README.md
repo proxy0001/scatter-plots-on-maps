@@ -90,6 +90,52 @@
 
 剩下的邏輯跟畫面，大致上就可以自己實現了。他的版本還用到了 useRef, useEffect, useCallback 等對 DOM 進行操作或是等待 state 更新之後再進行資料操作，感覺比較複雜。自己實現的版本只需要用到 useState 就可以了，先把要做的資料操作函式定義好，輸入接受 state，直接綁在 JSX 裡面即可。
 
+另外把 value 呈現的 format 開放出來可以自定義。
+```javascript
+<MultiRangeSlider min={periodConfig.min} max={periodConfig.max} name="period"
+    onChange={onRangeChange}
+    format={val => {
+    const hour = (Math.floor(periodConfig.hoursHandler(val))).toString().padStart(2, '0')
+    const minute = (periodConfig.minutesHandler(val)).toString().padStart(2, '0')
+    return `${hour}:${minute}`
+    }}/>
+```
+配合另外一隻函式，將 unixTimestamp 轉換，放入資料的 properties 裡面，讓之後可以篩選。兩者一起就可以容易地調整成 by hour or by minute 的篩選方式。
+
+```javascript
+export const unixTimestampToTimeOfDate = (unixTimestamp: number, unit:TimeUnit = 'minute') => {
+    const datetime = new Date(unixTimestamp * 1000)
+    const hours = datetime.getHours()
+    const minutes = datetime.getMinutes()
+    if (unit === 'minute') return hours * 60 + minutes
+    if (unit === 'hour') return hours
+}
+```
+
+根據 time unit 產生 config 設置
+```typescript
+const periodUnit: TimeUnit = 'hour'
+const periodConfig = ((unit: TimeUnit): periodConfig => {
+  const periodConfigs = {
+    hour: {
+      min: 0,
+      max: 24,
+      unit: 'hour',
+      hoursHandler: (v: number) => v,
+      minutesHandler: (v: number) => 0
+    } as periodConfig,
+    minute: {
+      min: 0,
+      max: 60 * 24,
+      unit: 'hour',
+      hoursHandler: (v: number) => v / 60,
+      minutesHandler: (v: number) => v % 60
+    } as periodConfig,
+  }
+  return periodConfigs[unit]
+})(periodUnit)
+```
+
 #### 初步使用 React + TypeScript 的心得
 
 React 16.8 之後，就不用寫 Class 了，一律寫 Functional Component 即可。要注意 state 不會立即更新，會等到 comonentDidUpdate 之後才會更新，一般要寫 Callback 或是使用 useEffect 去監聽 state 的變化。詳細可以看官網或是這篇 [Why React doesn’t update state immediately](https://blog.logrocket.com/why-react-doesnt-update-state-immediately/)。以及在 React 中，組件要影響父層組件的話，習慣是直接傳入函式給子組件，而不是由子組件 Emit Event 出來給父層。React 的實踐方式跟最佳解，隨著版本迭代，有很多不同，查找資料時要特別注意。例如[這篇](https://pjchender.blogspot.com/2020/07/typescript-react-using-typescript-in.html)提到的，不再建議使用 React.FC。
@@ -168,9 +214,9 @@ import { Map, ViewStateChangeEvent, Source, SourceProps, Layer, LayerProps } fro
 開始準備把資料丟到 Map 裡，首先是怎麼放入資料？ mapbox-gl 的設計上，資料是透過 addSource 放入 Map， Source 是專門提供資料用的，要顯示的話，要另外設置 Style Layer 去顯示，好處是同一個 Source 就可以用不同的顯示方式呈現，範例如[這個](https://docs.mapbox.com/mapbox-gl-js/example/geojson-line/)，然後 react-map-gl 的範例是[這個](https://visgl.github.io/react-map-gl/docs/api-reference/source)，詳細解說可以看[這篇](https://www.lostcreekdesigns.co/writing/a-complete-guide-to-sources-and-layers-in-react-and-mapbox-gl-js/)。
 
 接著定義資料，看範例基本上都是用 GeoJSON ，一種專門處理地理資訊(GIS) 結構的JSON 標準格式。從 Map 的定義裡面往下查找，可以發現 GeoJSON 這個格式定義，這個檔案實體上是放在 node_modules/@types/geojson/index.d.ts，那要怎麼引入呢？直接 import from 'geojson'，原理看這個 [How TypeScript resolves modules](https://www.typescriptlang.org/docs/handbook/module-resolution.html#how-typescript-resolves-modules)
-    ```typescript
-    import { FeatureCollection } from 'geojson'
-    ```
+```typescript
+import { FeatureCollection } from 'geojson'
+```
 
 終於可以在地圖上顯示出資料點了！
 
@@ -187,7 +233,7 @@ import { Map, ViewStateChangeEvent, Source, SourceProps, Layer, LayerProps } fro
 一開始先自己算中心點，但這樣不容易計算正確的 zoom 是多少，感覺這應該是很常見的需求，於是開始找範例。首先可以先看看[這個](https://visgl.github.io/react-map-gl/examples/zoom-to-bounds)，進去 github 看 code 用到了幾個東西，第一個是 Map 的 Prop initialViewState，第二個是 mapRef.current.fitBounds 這個方法。但這個範例是要點擊之後，才自動根據給予的 Bounds 進行 fit，但我們希望的是 init 的時候便自動根據資料進行 fit。然後找半天最後乖乖去看 Map 的定義，發現 initialViewState 有擴充這兩個 props: bounds 跟 fitbBoundsOptions，於是再回去官網文件看這兩個的解釋，在[這裡](https://visgl.github.io/react-map-gl/docs/api-reference/map#initialviewstate)，不太好找。
 
 基本上就是要提供一組範圍邊界，type 可以直接從 react-map-gl 引入，有兩種支援的格式如下：
-```typescript
+```javascript
     // 第一種
     // 第一位放 sw, 最西南的座標
     // 第二位放 ne, 最東北的座標
@@ -217,7 +263,7 @@ import { Map, ViewStateChangeEvent, Source, SourceProps, Layer, LayerProps } fro
 
 用 Popup 的時候，他初始的位置老是跑在很奇怪的地方，搞不太懂為什麼，後來就自己加 CSS 處理了。
 
-```typescript
+```javascript
 <Popup
     longitude={position[0]}
     latitude={position[1]}
@@ -265,7 +311,7 @@ const onMouseMove: (evt: MapLayerMouseEvent) => void = evt => {
 
 #### 讓控制項可以篩選資料
 看一下官網，mapbox-gl 有提供 Filter 的功能，針對 Layer，可以用他的 expressions 的形式輸入篩選條件，就只會呈現篩選後的資料了。[文檔](https://docs.mapbox.com/help/glossary/filter/)的範例如下：
-```typescript
+```javascript
 map.addLayer({
   id: layerID,
   type: 'symbol',
@@ -278,7 +324,7 @@ map.addLayer({
 });
 ```
 我們的情境下，有兩個以上的條件並存，所以還要看多條件的表達方式，[文檔](https://docs.mapbox.com/mapbox-gl-js/style-spec/other/#other-filter)在這，範例如下：
-```typescript
+```javascript
 [
     "all",
     ["==", "class", "street_limited"],
@@ -295,7 +341,7 @@ map.addLayer({
 4. 綁到 Layer 的組件上
 
 最麻煩的是第二點，那個 expressions 的格式比較複雜一點，我們做了一個小幫手 filterProducer 幫我們。小幫手提供增加跟減少條件的方法，回傳最終組合出的 expressions。內部會將條件存著，並處理一些格式上的差異。使用上像這樣：
-```typescript
+```javascript
 /**
  * 
  * @param idx 條件要放在第幾位，如果對同樣位子增加條件的話，會覆寫該位子的條件。
@@ -305,8 +351,8 @@ map.addLayer({
  * @returns 
  */
 filterProducer.addFilter(1, 'in', 'country', ...['Taiwan', 'US'])
-filterProducer.addFilter(2, '>=', 'minutes', 300)
-filterProducer.addFilter(3, '<=', 'minutes', 1000)
+filterProducer.addFilter(2, '>=', 'timeOfDate', 300)
+filterProducer.addFilter(3, '<=', 'timeOfDate', 1000)
 ```
 
 接下來就是要把一些接口拉出來給外部控制使用。這裡就開始涉及到要怎麼拆分的問題，最主要是讓 ScactterMap 跟資料解耦，不然換一份資料，這個 Component 基本上就不能用了，復用性太糟。最終我們定義的介面如下，還可以更好，但需要再深入多看一下 TypeScript。
@@ -353,7 +399,7 @@ palette 本身就只是提供一些顏色組合，但是反而花了超多時間
 
 #### component 一直被調用?
 
-主要就是常常會看到重複的 console.log 感到非常不解，尤其是當 setState 之後。state 改變之後，React Component 就會被調用，然後跑出 console.log。一直以為是自己寫法有問題，但從這篇看起來，好像是一種正常的情況？
+主要就是常常會看到重複的 console.log 被調用感到非常不解，尤其是當 setState 之後。state 改變之後，React Component 就會被調用，然後跑出 console.log。一直以為是自己寫法有問題，但從這篇看起來，好像是一種正常的情況？
 
 [Why does React call my component more times than needed?](https://stackoverflow.com/questions/68666070/why-does-react-call-my-component-more-times-than-needed)
 

@@ -23,10 +23,19 @@ export const timestampFormatter = (timestamp: string | number) => {
     return new Date(timestamp as number * 1000 - tzoffset).toISOString().slice(0, 19).replace(/-/g, '/').replace('T', ' ').replace(/:\d{2}$/, '');
 }
 
-export const unixTimestampToMinutes = (unixTimestamp: number) => {
+export type TimeUnit = 'hour' | 'minute'
+
+/**
+ * 
+ * @param unixTimestamp 
+ * @param unit: 'hour' | 'minute'
+ * @returns 
+ */
+export const unixTimestampToTimeOfDate = (unixTimestamp: number, unit:TimeUnit = 'minute') => {
     const datetime = new Date(unixTimestamp * 1000)
     const hours = datetime.getHours()
     const minutes = datetime.getMinutes()
+    if (unit === 'hour') return hours
     return hours * 60 + minutes
 }
 
