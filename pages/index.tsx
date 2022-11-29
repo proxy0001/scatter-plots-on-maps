@@ -75,7 +75,7 @@ export default function Home() {
       </Head>
 
       <main className="flex flex-row w-full items-stretch min-h-screen">
-        <div className="flex-1">
+        <div className="w-full pr-64">
           <ScatterMap
             data={sampleData}
             filter={filter}
@@ -100,7 +100,7 @@ export default function Home() {
             </Fragment>
           </ScatterMap>
         </div>
-        <div className=" basis-64 flex flex-col bg-stone-200 px-4 py-2">
+        <aside className="fixed top-0 right-0 w-64 h-full flex flex-col bg-stone-200 px-4 py-2">
           <div className="text-2xl text-center pt-1 pb-2 text-gray-700">Filter</div>
           <Panel title="Country / Region">
             <MultiSelect options={countryOptions} name="country"
@@ -115,7 +115,7 @@ export default function Home() {
                 return `${hour}:${minute}`
               }}/>
           </Panel>
-        </div>
+        </aside>
       </main>
     </div>
   )
