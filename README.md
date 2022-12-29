@@ -2,6 +2,7 @@
 ## 前言
 
 做個基於地圖的散佈圖 Side Project 來學習新工具，主要用到 React, TypeScript, Tailwind, mapbox, deck.gl 這幾個。
+[Online Demo](https://scatter-plots-on-maps.vercel.app/)
 
 ## 目標
 - 學習使用新工具建構應用
